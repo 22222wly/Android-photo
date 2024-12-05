@@ -4,8 +4,10 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-    private static String BASE_URL = "http://192.168.31.140:8001/"; // 默认值
+    private static String BASE_URL = "http://8.155.30.228:8000/"; // 默认值
     private static Retrofit retrofit;
+
+
 
     // 更新 BASE_URL
     public static void updateBaseUrl(String newBaseUrl) {

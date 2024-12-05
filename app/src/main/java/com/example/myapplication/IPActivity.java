@@ -26,7 +26,7 @@ public class IPActivity extends AppCompatActivity {
 
         // 从 SharedPreferences 加载上次保存的 IP 地址
         SharedPreferences sharedPreferences = getSharedPreferences("AppSettings", MODE_PRIVATE);
-        String savedIp = sharedPreferences.getString("base_url", "http://192.168.31.140:8001/"); // 默认值
+        String savedIp = sharedPreferences.getString("base_url", "http://8.155.30.228:8000/"); // 默认值
         etIpAddress.setText(savedIp);
 
         btnSaveIp.setOnClickListener(new View.OnClickListener() {

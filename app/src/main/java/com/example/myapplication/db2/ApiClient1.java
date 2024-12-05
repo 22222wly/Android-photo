@@ -5,7 +5,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient1 {
     // 默认的 BASE_URL，如果没有设置新的 URL，使用这个值
-    private static String BASE_URL = "http://192.168.31.140:8001/"; // 默认值
+    private static String BASE_URL = "http://8.155.30.228:8000/"; // 默认值
     private static Retrofit retrofit;
 
     // 获取 Retrofit 实例
