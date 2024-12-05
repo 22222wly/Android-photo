@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -44,13 +45,11 @@ import okhttp3.Response;
 
 public class TakeActivity extends AppCompatActivity {
 
-    private static final String SERVER_BASE_URL = "http://192.168.31.140:8001"; // 全局服务器地址
-    private static final String UPLOAD_ENDPOINT = SERVER_BASE_URL + "/image/upload"; // 上传接口地址
     private static final int REQUEST_PERMISSIONS_CODE = 100;
 
     private ActivityMainBinding binding;
     private Button takePhoto;
-    private Button uploadButton; // 新增上传按钮
+    private Button uploadButton;
     private TextView tvUsername;
     private ImageView photoView;
     private Uri photoUri;
@@ -80,22 +79,16 @@ public class TakeActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         takePhoto = binding.btnTakePhoto;
-        uploadButton = binding.btnUpload; // 绑定新增的上传按钮
+        uploadButton = binding.btnUpload;
         photoView = binding.imageView;
         tvUsername = binding.tvUsername;
 
         Intent intent = getIntent();
         String username = intent.getStringExtra("username");
-
-        if (tvUsername != null ) {
-            tvUsername.setText("Welcome, " + username);
-        } else {
-            tvUsername.setText("Welcome, User");
-        }
+        tvUsername.setText("Welcome, " + (username != null ? username : "User"));
 
         checkPermissions();
 
-        // 拍照按钮点击事件
         takePhoto.setOnClickListener(view -> {
             try {
                 photoFile = createImageFile();
@@ -114,7 +107,6 @@ public class TakeActivity extends AppCompatActivity {
             }
         });
 
-        // 上传按钮点击事件
         uploadButton.setOnClickListener(view -> {
             if (photoFile != null && photoFile.exists()) {
                 new Thread(() -> uploadImage(photoFile)).start();
@@ -160,6 +152,14 @@ public class TakeActivity extends AppCompatActivity {
     }
 
     private void uploadImage(File imageFile) {
+        String baseUrl = getBaseUrl();
+        if (baseUrl == null) {
+            showToast("服务器地址未设置，请先设置 IP 地址");
+            return;
+        }
+
+        String uploadEndpoint = baseUrl + "image/upload";
+
         showToast("正在上传图片，请稍候...");
 
         OkHttpClient client = new OkHttpClient();
@@ -172,7 +172,7 @@ public class TakeActivity extends AppCompatActivity {
                 .build();
 
         Request request = new Request.Builder()
-                .url(UPLOAD_ENDPOINT)
+                .url(uploadEndpoint)
                 .post(requestBody)
                 .build();
 
@@ -189,7 +189,9 @@ public class TakeActivity extends AppCompatActivity {
 
                     runOnUiThread(() -> {
                         showToast("图片上传成功，加载处理结果");
-                        loadProcessedImage(imageUrl);
+                       Log.d("DEBUG_TAG", baseUrl+imageUrl);
+                        loadProcessedImage(baseUrl+imageUrl);
+
                     });
                 } else {
                     runOnUiThread(() -> showToast("图片上传失败"));
@@ -206,12 +208,8 @@ public class TakeActivity extends AppCompatActivity {
 
     private void loadProcessedImage(String imageUrl) {
         new Thread(() -> {
-            String fullUrl = Uri.parse(SERVER_BASE_URL).buildUpon()
-                    .appendEncodedPath(imageUrl)
-                    .build().toString();
-
             OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder().url(fullUrl).build();
+            Request request = new Request.Builder().url(imageUrl).build();
 
             try {
                 Response response = client.newCall(request).execute();
@@ -228,6 +226,11 @@ public class TakeActivity extends AppCompatActivity {
                 runOnUiThread(() -> showToast("加载处理后的图片失败"));
             }
         }).start();
+    }
+
+    private String getBaseUrl() {
+        SharedPreferences sharedPreferences = getSharedPreferences("AppSettings", MODE_PRIVATE);
+        return sharedPreferences.getString("base_url", null);
     }
 
     private void showToast(String message) {
